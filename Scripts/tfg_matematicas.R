@@ -15,19 +15,59 @@ Librerías utilizadas:
 
 Primero, importamos los datos sobre los que queremos trabajar. En nuestro caso, y dado lo adeucado de este tipo de análisis sobre series financieras, he decido utilizar el histórico (desde 1960) hasta hoy (2020) diario del valor de la acción de IBM en la bolsa de Nueva York (N
 
-_A día 18 de mayo del 2020, tarda en:_
-- _instalar paquetes: $\approx 2\mathrm{m}\,8\mathrm{s}$_
+_A día 21 de mayo del 2020, tarda en:_
+- _instalar paquetes: $\approx 7\mathrm{m}\,20\mathrm{s}$_
 - _cargar el resto del cuaderno: prácticamente nada
 """
 
-# not-installed libs 
-install.packages("dygraphs")
-install.packages("fNonlinear")
-install.packages("tseries")
-install.packages("forecast")
-install.packages("rugarch")
+# primero se instala la TSA desde github (ahora fuera de CRAN)
+Sys.time()
+devtools::install_github("cran/TSA")
 
-# libs
+Sys.time()
+# not-installed libs 
+print(" ")
+print("Installing dygraphs")
+install.packages("dygraphs")
+print(" ")
+print("Installing fNonlinear")
+install.packages("fNonlinear")
+print(" ")
+print("Installing tseries")
+install.packages("tseries")
+print(" ")
+print("Installing forecast")
+install.packages("forecast")
+print(" ")
+print("Installing rugarch")
+install.packages("rugarch")
+print(" ")
+print("Installing fRegression")
+install.packages("fRegression")
+print(" ")
+print("Installing tseriesChaos")
+install.packages("tseriesChaos")
+print(" ")
+print("Installing Chaos01")
+install.packages("Chaos01")
+print(" ")
+print("Installing pracma")
+install.packages("pracma")
+print(" ")
+print("Installing DChaos")
+install.packages("DChaos")
+print(" ")
+print("Installing nonlinearTseries")
+install.packages("nonlinearTseries")
+print(" ")
+print("Installing fractal")
+install.packages("fractal")
+print(" ")
+Sys.time()
+
+# libs # hay que ejecutarlo 2 veces, creo poder arreglarlo con excepciones (trycatch)
+Sys.time()
+library(pracma)
 library(ggplot2)
 library(dygraphs)
 library(lubridate)
@@ -37,9 +77,18 @@ library(htmlwidgets)
 library(fNonlinear)
 library(tseries)
 library(forecast)
+library(fRegression)
+library(lmtest)
+library(TSA)
 library(rugarch)
+library(Chaos01)
+library(tseriesChaos)
+library(DChaos)
+library(nonlinearTseries)
+library(fractal)
 
-ibmdata = read.csv("IBM.csv",sep=",") # read csv
+#  Es necesario subir IBM.csv con anterioridad!! (o añadirlo a la carpeta si es un entorno local)
+ibmdata = read.csv("IBM.csv",sep=",") # read csv 
 ibmdata$Date <- as.Date(ibmdata$Date,format="%Y-%m-%d") # date formatting
 
 head(ibmdata)
@@ -100,6 +149,8 @@ plot=qplot(serie_original, geom="histogram")
 plot
 ggsave(plot,file="hist_original.eps")
 
+
+
 """### 0.2 Creación d_ln_y_t (y estadísticas descriptivas)
 
 Se crea la variable $z_t = \nabla\ln (y_t)$
@@ -153,17 +204,22 @@ plot
 ggsave(plot,file="hist_retornos.eps")
 
 qqnorm(y)
-qqline(y, col = "blue")
-ggsave(plot,file="qqplot_retornos.eps")
+pl=qqline(y, col = "blue")
+ggsave(pl,file="qqplot_retornos.eps")
+
+m <- lm(y ~ 1)
+for (i in 1:8){print(bgtest(m,order=i))}
 
 """## 1 Modelización de la serie
 
 ### 1.1 Modelización ARMA
 """
 
-plot(acf(y,plot=F)[1:35])
+p=plot(acf(y,plot=F)[1:35])
+ggsave(p,file="ACF_retornos.eps")
 
-pacf(y)
+p=plot(pacf(y,plot=F)[0:35])
+ggsave(p,file="PACF_retornos.eps")
 
 """**ARMA(0,0)**"""
 
@@ -174,12 +230,6 @@ arma00=arima(y,c(0,0,0))
 bic=AIC(arma00,k=log(length(y)))
 bic
 
-residuos_arma00=residuals(arma00)
-
-plot(acf(residuos_arma00,plot=F)[1:35])
-
-pacf(residuos_arma00)
-
 """**ARMA(1,1)**"""
 
 arma11=arima(y,c(1,0,1))
@@ -189,9 +239,15 @@ bic
 
 residuos_arma11=residuals(arma11)
 
-plot(acf(residuos_arma11,plot=F)[1:35])
+arma11
 
-pacf(residuos_arma11)
+coeftest(arma11)
+
+p=plot(acf(residuos_arma11,plot=F)[1:35])
+ggsave(p,file="ACF_arma11.eps")
+
+p=plot(pacf(residuos_arma11,plot=F)[0:35])
+ggsave(p,file="PACF_arma11.eps")
 
 """#### Estadísticas Descriptivas de los residuos del ARMA(1,1)
 
@@ -232,20 +288,33 @@ plot
 ggsave(plot,file="hist_arma11.eps")
 
 qqnorm(y)
-qqline(y, col = "blue")
-ggsave(plot,file="qqplot_arma11.eps")
+pl=qqline(y, col = "blue")
+ggsave(pl,file="qqplot_arma11.eps")
 
 plot(y)
+
+#test heterocedasticidad
+m <- lm(y ~ 1)
+for (i in 1:8){print(bgtest(m,order=i))}
 
 """### 1.2 Modelización GARCH
 
 **GARCH(1,1)**
 """
 
+y=ibmdata$d_ln_close
+y=y[2:length(y)]
+
 garch11=garch(y,c(1,1))
 
 bic=AIC(garch11,k = log(length(y)))
 bic
+
+garch11
+
+coeftest(garch11)
+
+residuos_garch11=residuals(garch11)
 
 #for (i in 0:3){
 #  for (j in 1:3){
@@ -296,19 +365,34 @@ plot
 ggsave(plot,file="hist_garch11.eps")
 
 qqnorm(y)
-qqline(y, col = "blue")
-ggsave(plot,file="qqplot_garch11.eps")
+pl=qqline(y, col = "blue")
+ggsave(pl,file="qqplot_garch11.eps")
 
-plot(y)
+plot(y,type="l")
 
-"""### 1.3 Modelización EARCH"""
+#test heterocedasticidad
+m <- lm(residuals(garch11) ~ 1)
+for (i in 1:8){print(bgtest(m,order=i))}
 
-spec = ugarchspec(variance.model = list(model = "eGARCH", garchOrder = c(1,1)))
-earch11 = ugarchfit(y, spec = spec, solver = "solnp")
+"""### 1.3 Modelización EGARCH"""
 
-residuos_earch11=residuals(earch11)
+y=ibmdata$d_ln_close
 
-"""#### Estadísticas Descriptivas de EGARCH(1,1)
+y=y[2:length(y)]
+
+spec = ugarchspec(variance.model = list(model = "eGARCH", garchOrder = c(2,1)),mean.model=list(armaOrder=c(0,0),include.mean=FALSE))
+earch11 = ugarchfit(y, spec = spec)
+
+residuos_earch11=residuals(earch11,standardize=TRUE) # se estandarizan los residuos
+
+earch11
+
+"""#### Estadísticas Descriptivas de EGARCH(2,1)
+
+1.   Elemento de lista
+2.   Elemento de lista
+
+
 
 Media, Mediana, DT, Mínimo, Máximo, Asimetría, Curtosis, Jarque-Bera y N
 """
@@ -341,17 +425,20 @@ jarque.bera.test(y)
 
 length(y)
 
-serie_earch11=y
-plot=qplot(serie_earch11, geom="histogram") 
+serie_egarch21=y
+plot=qplot(serie_egarch21, geom="histogram") 
 plot
 ggsave(plot,file="hist_earch11.eps")
 
 qqnorm(y)
-qqline(y, col = "blue")
-ggsave(plot,file="qqplot_earch11.eps")
+pl=qqline(y, col = "blue")
+ggsave(pl,file="qqplot_eearch11.png")
 
 plot(y)
 
+#test heterocedasticidad
+m <- lm(y ~ 1)
+for (i in 1:8){print(bgtest(m,order=i))}
 
 
 
@@ -369,16 +456,172 @@ plot(y)
 
 
 
+Sys.time()
+
+"""## 2 Tests de linealidad"""
+
+# un simple renombre
+x=ts(ibmdata$d_ln_close[2:length(ibmdata$d_ln_close)]) # retornos
+y=residuos_arma11 #arma11
+z=ts(residuos_garch11) #garch
+w=ts(residuos_earch11) #egarch
+
+"""### 2.1. BDS Test"""
+
+bds.test(x, m = 10, eps = seq(0.5 * sd(x), 2 * sd(x), length = 4),
+         trace = FALSE)
+
+bds.test(y, m = 10, eps = seq(0.5 * sd(x), 2 * sd(x), length = 4),
+         trace = FALSE)
+
+bds.test(z, m = 10, eps = seq(0.5 * sd(x), 2 * sd(x), length = 4),
+         trace = FALSE)
+
+bds.test(w, m = 10, eps = seq(0.5 * sd(x), 2 * sd(x), length = 4),
+         trace = FALSE)
 
 
 
-"""## 2 Tests de linealidad
+"""### 2.2 Test de Keenan"""
 
-### 2.1. BDS Test
+Keenan.test(x)
 
-No se rechaza la nula (iid).
+Keenan.test(y)
+
+Keenan.test(z,23)
+
+Keenan.test(w,23)
+
+"""### 2.3 Test de Tsay"""
+
+Tsay.test(x)
+
+Tsay.test(y)
+
+Tsay.test(z,23)
+
+Tsay.test(w,23)
+
+
+
+"""### 2.4 Test de White"""
+
+white.test(x)
+
+white.test(y)
+
+white.test(z)
+
+white.test(w)
+
+"""### 2.5 Test de Terasvirta"""
+
+terasvirta.test(x)
+
+terasvirta.test(y)
+
+terasvirta.test(z)
+
+terasvirta.test(w)
+
+"""### 2.6 Test RESET de Ramsey"""
+
+m <- lm(x ~ 1)
+resetTest(m)
+
+m <- lm(y ~ 1)
+resetTest(m)
+
+m <- lm(z ~ 1)
+resetTest(m)
+
+m <- lm(w ~ 1)
+resetTest(m)
+
+"""## 3 Test de Caos
+
+### 3.1 Gráficos de recurrencia
 """
 
-x=ibmdata$Close
-bdsTest(x, m = 15, eps =0.35*sd(ibmdata$Close), title = "BDS Test", description = "BDS Test aplicado al historico de IBM:\n . . H0: xt iid vs H1: xt not iid")
+y=ibmdata$d_ln_close[2:nrow(ibmdata)]
+
+fNonlinear::recurrencePlot(y,m=1,d=1,eps=0.01,end.time=5001,pch = ".")
+
+fNonlinear::recurrencePlot(y,m=2,d=2,eps=0.01,end.time=5001,pch = ".")
+
+recurr(lorenz.ts, m=3, d=2, start.time=15, end.time=30)
+
+recurr(y, m=2, d=1, start.time=350, end.time=500)
+
+"""### 3.2 Test 0-1"""
+
+y=ibmdata$d_ln_close[2:nrow(ibmdata)]
+
+testChaos01(y)
+
+"""### 3.3. Coeficiente de Hurst"""
+
+y=ibmdata$d_ln_close[2:nrow(ibmdata)]
+
+hurstexp(y)
+
+"""### 3.4. Exponente de Lyapunov (Shintani-Linton)"""
+
+
+
+
+
+"""### 3.5. Dimensión de correlación"""
+
+y=ibmdata$d_ln_close[2:nrow(ibmdata)]
+
+corrDim(y)
+
+"""### 3.6 Mapa del espacio de fases"""
+
+y=ibmdata$d_ln_close[2:nrow(ibmdata)]
+
+takens = buildTakens( y, embedding.dim=2, time.lag=1)
+plot(takens, pch='.')
+
+takens = buildTakens( y, embedding.dim=3, time.lag=1)
+plot(takens, pch='.')
+
+takens = buildTakens( y, embedding.dim=5, time.lag=5)
+plot(takens, pch='.')
+
+"""### 3.7 Algoritmo MESAH"""
+
+y=ibmdata$d_ln_close[2:nrow(ibmdata)]
+
+MAX=max(y)
+MIN=min(y)
+y_1=y[1:(length(y)-1)]
+y=y[2:length(y)]
+
+value=((y-MAX)^2+(y_1-MIN)^2)
+value=value/2
+
+hist(value)
+
+"""### 3.8 Mapa de Poincaré"""
+
+y=ibmdata$d_ln_close[2:nrow(ibmdata)]
+
+z <- poincareMap(y, extrema="max")
+z <- embedSeries(z$amplitude, tlag=1, dimension=3)
+plot(z, pch=15, cex=2)
+
+"""### 3.9 Test de Shintani-Linton (Lyapunov)"""
+
+y=ibmdata$d_ln_close[2:nrow(ibmdata)]
+
+DChaos::lyapunov(y) # debe de haber algun error en la librería utilizada (DChaos), pero sirve
+
+"""# Otros (búsqueda de fuentes)"""
+
+install.packages("sos"); 
+library("sos");
+
+findFn("Volterra Series")
 
