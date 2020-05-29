@@ -167,6 +167,56 @@ dty=sd(y)
 for (i in seq(0.1,2,0.35)){
   ruido=rnorm(length(y),mean=0,sd=i*dty) # en funcion de la dt de la serie
   serieruido=y+i*ruido
-  cat(round(i, digits = 1),":",round(Tsay.test(serieruido)$p.value,digits=3),"\n")}
+  cat(round(i, digits = 1),":",round(Tsay.test(serieruido,1)$p.value,digits=3),"\n")}
 
 # parece ser que alrededor del 0.8, pero no parece muy robusto.
+
+arma = as.numeric(read.csv("arma11.csv",sep=",",header=FALSE)[,1]) # read csv 
+garc = as.numeric(read.csv("garc11.csv",sep=",",header=FALSE)[,1]) # read csv 
+egar = as.numeric(read.csv("egar21.csv",sep=",",header=FALSE)[,1]) # read csv
+
+##### arma
+
+y=arma
+
+sigma=0
+print(c("Sigma", "p-value"))
+print(c(sigma,Tsay.test(y,1)$p.value))
+
+cat(" σ ", ":","p-value","\n")
+dty=sd(y)
+for (i in seq(0.1,2,0.35)){
+  ruido=rnorm(length(y),mean=0,sd=i*dty) # en funcion de la dt de la serie
+  serieruido=y+i*ruido
+  cat(round(i, digits = 1),":",round(Tsay.test(serieruido,1)$p.value,digits=3),"\n")}
+
+##### garch
+
+y=garc
+
+sigma=0
+print(c("Sigma", "p-value"))
+print(c(sigma,Tsay.test(y,1)$p.value))
+
+cat(" σ ", ":","p-value","\n")
+dty=sd(y)
+for (i in seq(0.1,2,0.35)){
+  ruido=rnorm(length(y),mean=0,sd=i*dty) # en funcion de la dt de la serie
+  serieruido=y+i*ruido
+  cat(round(i, digits = 1),":",round(Tsay.test(serieruido,1)$p.value,digits=3),"\n")}
+
+##### egar
+
+y=egar
+
+sigma=0
+print(c("Sigma", "p-value"))
+print(c(sigma,Tsay.test(y,1)$p.value))
+
+cat(" σ ", ":","p-value","\n")
+dty=sd(y)
+for (i in seq(0.1,2,0.35)){
+  ruido=rnorm(length(y),mean=0,sd=i*dty) # en funcion de la dt de la serie
+  serieruido=y+i*ruido
+  cat(round(i, digits = 1),":",round(Tsay.test(serieruido,1)$p.value,digits=3),"\n")}
+

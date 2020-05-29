@@ -14,36 +14,80 @@ import numpy as np
 import math as mt
 from PIL import Image
 
-a=pd.read_csv("IBM.csv") # debe subirse IBM.csv
+x=pd.read_csv("retorn.csv",header=None) # debe subirse retorn.csv etc
+y=pd.read_csv("arma11.csv",header=None) # debe subirse retorn.csv etc
+z=pd.read_csv("garc11.csv",header=None) # debe subirse retorn.csv etc
+w=pd.read_csv("egar21.csv",header=None) # debe subirse retorn.csv etc
 
-d_ln_a=[]
-a0=a.Close[0]
-for i in a.Close[1:]:
-  d_ln_a.append(mt.log(i)-mt.log(a0))
-  a0=i
+w
 
 a4_dims = (20, 6)
 fig, ax = pyplot.subplots(figsize=a4_dims)
-sns.lineplot(range(len(d_ln_a)),d_ln_a)
+sns.lineplot(range(len(x[0])),x[0])
 
-x=d_ln_a
+xe=x[0].values
 
 arr=[]
 eps=0.005
-for i in range(len(x)):
-  for j in range(len(x)):
-    if abs(x[i]-x[j])<eps:
+for i in range(len(xe)):
+  for j in range(len(xe)):
+    if abs(xe[i]-xe[j])<eps:
       arr.append(0)
     else:
       arr.append(255)
 arr=np.array(arr)
 arr=arr.astype(np.uint8)
-
-arr.resize((len(x),len(x)))
-
+arr.resize((len(xe),len(xe)))
 im = Image.fromarray(arr,mode="L")
 im.show()
+im.resize((600,600))
 
+xe=y[0].values
+arr=[]
+eps=0.005
+for i in range(len(xe)):
+  for j in range(len(xe)):
+    if abs(xe[i]-xe[j])<eps:
+      arr.append(0)
+    else:
+      arr.append(255)
+arr=np.array(arr)
+arr=arr.astype(np.uint8)
+arr.resize((len(xe),len(xe)))
+im = Image.fromarray(arr,mode="L")
+im.show()
+im.resize((600,600))
+
+xe=z[0].values
+arr=[]
+eps=0.5
+for i in range(len(xe)):
+  for j in range(len(xe)):
+    if abs(xe[i]-xe[j])<eps:
+      arr.append(0)
+    else:
+      arr.append(255)
+arr=np.array(arr)
+arr=arr.astype(np.uint8)
+arr.resize((len(xe),len(xe)))
+im = Image.fromarray(arr,mode="L")
+im.show()
+im.resize((600,600))
+
+xe=w[0].values
+arr=[]
+eps=0.5
+for i in range(len(xe)):
+  for j in range(len(xe)):
+    if abs(xe[i]-xe[j])<eps:
+      arr.append(0)
+    else:
+      arr.append(255)
+arr=np.array(arr)
+arr=arr.astype(np.uint8)
+arr.resize((len(xe),len(xe)))
+im = Image.fromarray(arr,mode="L")
+im.show()
 im.resize((600,600))
 
 
